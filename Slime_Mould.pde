@@ -1,20 +1,24 @@
-int numAgents = 10000;
+final int numAgents = 10000;
 Agent[] agents = new Agent[numAgents];
 
-boolean printFPS = false;
-int perFrame = 1;
+final boolean printFPS = false;
+final int perFrame = 1;
 
-boolean reflect = true;
-boolean randomTurn = false;
+final String edgeBehaviour = "reflect";
+final boolean randomTurn = true;
 
-float speed = 0.1;
-float turnSpeed = 0.1;
-float senseAngle = PI / 6.0;
-float senseDist = 2;
+final String genMode = "circle";
+final float noiseScale = 100;
 
-float falloff = 0.05;
-boolean blur = true;
-int blurRad = 1;
+final float speed = 1;
+final float turnStrength = 0.5;
+final float senseAngle = PI / 6.0;
+final float turnSpeed = turnStrength * senseAngle;
+final float senseDist = 32;
+
+final float falloff = 0.005;
+final int blurRad = 1;
+final float colorFalloff = 0.1;
 
 float[][] trailMap;
 float[][] trailMapPrev;
@@ -26,10 +30,26 @@ PVector randomPointInCircle(float r, PVector c) {
 }
 
 void setup() {
-  size(256, 256);
+  size(1080,720);
   //frameRate(24);
   for (int i = 0; i < numAgents; i++) {
-    agents[i] = new Agent(randomPointInCircle(width / 5, new PVector(width / 2, height / 2)), random(TWO_PI));
+    switch(genMode) {
+      case "circle":
+        agents[i] = new Agent(randomPointInCircle(width / 5, new PVector(width / 2, height / 2)), random(TWO_PI));
+        break;
+      case "rand":
+        agents[i] = new Agent(new PVector(random(width), random(height)), random(TWO_PI));
+        break;
+      case "noisePos":
+        agents[i] = new Agent(new PVector(width * noise(i / noiseScale), height * noise(i / noiseScale + 1000)), random(TWO_PI));
+        break;
+      case "noiseDir":
+        int j = (int)map(i, 0, numAgents, 0, width * height);
+        int x = j % width;
+        int y = j / width;
+        agents[i] = new Agent(new PVector(x, y), TWO_PI * noise(x / noiseScale, y / noiseScale + 100));
+        break;
+    }
   }
   
   trailMap = new float[width][height];
@@ -57,21 +77,18 @@ void draw() {
         if (trailMap[x][y] > 0) {
           trailMapPrev[x][y] -= falloff;
         }
-        if (blur) {
-          float sum = 0;
-          for (int dx = -blurRad; dx <= blurRad; dx++) {
-            int ox = x + dx;
-            for (int dy = -blurRad; dy <= blurRad; dy++) {
-              int oy = y + dy;
-              if (0 <= ox && ox < width && 0 <= oy && oy < height) {
-                sum += trailMapPrev[ox][oy];
-              }
+        float sum = 0;
+        for (int dx = -blurRad; dx <= blurRad; dx++) {
+          int ox = x + dx;
+          for (int dy = -blurRad; dy <= blurRad; dy++) {
+            int oy = y + dy;
+            if (0 <= ox && ox < width && 0 <= oy && oy < height) {
+              sum += trailMapPrev[ox][oy];
             }
           }
-          trailMap[x][y] = (sum / pow(2 * blurRad + 1, 2));
-        } else {
-          trailMap[x][y] = trailMapPrev[x][y];
         }
+        trailMap[x][y] = (sum / pow(2 * blurRad + 1, 2));
+        
       }
     }
     
@@ -87,7 +104,7 @@ void draw() {
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
       int index = x + y * width;
-      pixels[index] = color(trailMapPrev[x][y]);
+      pixels[index] = color(pow(trailMapPrev[x][y], colorFalloff));
     }
   }
   updatePixels();
