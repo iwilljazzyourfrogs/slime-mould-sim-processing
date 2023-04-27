@@ -2,6 +2,7 @@ class Agent {
   PVector pos;
   PVector dir;
   
+  
   Agent(PVector p, float d) {
     pos = p;
     dir = new PVector(speed * cos(d), speed * sin(d));
@@ -38,6 +39,13 @@ class Agent {
           dir.rotate(random(TWO_PI));
         }
         break;
+      case "randPos":
+        if (!(0 <= pos.x && pos.x < width) || !(0 <= pos.y && pos.y < height)) {
+          pos = new PVector(random(width), random(height));
+          dir.rotate(random(TWO_PI));
+        }
+        break;
+
     }
     
     float f = sense(0);
@@ -73,7 +81,9 @@ class Agent {
   }
   
   float sense(float angle) {
-    PVector sensorDir = new PVector(senseDist * cos(angle + dir.heading()), senseDist * sin(angle + dir.heading()));
+    float cosVal = cosValues[(int)((angle + dir.heading()) / TWO_PI * angleCount + angleCount) % angleCount];
+    float sinVal = sinValues[(int)((angle + dir.heading()) / TWO_PI * angleCount + angleCount) % angleCount];
+    PVector sensorDir = new PVector(senseDist * cosVal, senseDist * sinVal);
     PVector sensorPos = new PVector(pos.x + sensorDir.x, pos.y + sensorDir.y);
     switch(edgeBehaviour) {
       case "center":
