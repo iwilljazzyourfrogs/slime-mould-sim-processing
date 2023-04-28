@@ -1,9 +1,9 @@
-final int numAgents = 500;
+final int numAgents = 50000;
 Agent[] agents = new Agent[numAgents];
 
 final boolean printFPS = false;
 
-final String edgeBehaviour = "rand";
+final String edgeBehaviour = "reflect";
 
 final String genMode = "noise";
 final float noiseScale = 100;
@@ -12,8 +12,8 @@ final int angleCount = 16;
 float[] cosValues = new float[angleCount];
 float[] sinValues = new float[angleCount];
 
-final float speed = 0.5;
-final float turnStrength = 0.9;
+final float speed = 1;
+final float turnStrength = 0.25;
   final float senseAngle = PI / 4;
 final float turnSpeed = turnStrength * senseAngle;
 final float randTurnChance = 0;
@@ -24,7 +24,7 @@ final int blurRad = 1;
 final int blurW = 2 * blurRad + 1;
 final float colorFalloff = 1;
 
-final boolean crossBlur = true;
+final boolean crossBlur = false;
 final int[][] crossBlurOffsets = {
   {0, -1},
   {1, 0}, 
@@ -83,6 +83,7 @@ void draw() {
     int x = i % width;
     int y = i / width;
     trailMapPrev[x][y] -= falloff;
+    trailMap[x][y] -= falloff;
     float sum = 0;
     if (crossBlur) {
       for (int[] o : crossBlurOffsets) {
