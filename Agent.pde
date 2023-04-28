@@ -52,17 +52,8 @@ class Agent {
     float l = sense(senseAngle);
     float r = sense(-senseAngle);
     
-    
-    if (randomTurn) {
-      if (f < l || f < r) {
-        if (l == r) {
-          dir.rotate(0);
-        } else if (l > r) {
-          dir.rotate(sqrt(random(1)) * turnSpeed);
-        } else if (r > l) {
-          dir.rotate(-sqrt(random(1)) * turnSpeed);
-        }
-      }
+    if (random(1) < randTurnChance) {
+      dir.rotate(random(-turnSpeed, turnSpeed));
     } else {
       if (f < l || f < r) {
         if (l > r) {

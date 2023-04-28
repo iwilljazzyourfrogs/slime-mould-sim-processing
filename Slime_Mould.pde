@@ -1,12 +1,9 @@
-import processing.javafx.*;
-
-final int numAgents = 10000;
+final int numAgents = 500;
 Agent[] agents = new Agent[numAgents];
 
 final boolean printFPS = false;
 
-final String edgeBehaviour = "center";
-final boolean randomTurn = true;
+final String edgeBehaviour = "rand";
 
 final String genMode = "noise";
 final float noiseScale = 100;
@@ -16,14 +13,16 @@ float[] cosValues = new float[angleCount];
 float[] sinValues = new float[angleCount];
 
 final float speed = 0.5;
-final float turnStrength = 0.2;
-final float senseAngle = PI / 6.0;
+final float turnStrength = 0.9;
+  final float senseAngle = PI / 4;
 final float turnSpeed = turnStrength * senseAngle;
+final float randTurnChance = 0;
 final float senseDist = 3;
 
-final float falloff = 0.02;
+final float falloff = 0.05;
 final int blurRad = 1;
 final int blurW = 2 * blurRad + 1;
+final float colorFalloff = 1;
 
 final boolean crossBlur = true;
 final int[][] crossBlurOffsets = {
@@ -33,7 +32,7 @@ final int[][] crossBlurOffsets = {
   {-1, 0}, 
   {0, 0}
 };
-int numBlurPixels = (int) pow(blurW, 2);
+int numBlurPixels = blurW * blurW;
 
 float[][] trailMap;
 float[][] trailMapPrev;
@@ -45,7 +44,7 @@ PVector randomPointInCircle(float r, PVector c) {
 }
 
 void setup() {
-  size(256, 256);
+  size(256, 256, P2D);
   for (int i = 0; i < numAgents; i++) {
     switch(genMode) {
       case "circle":
@@ -83,9 +82,7 @@ void draw() {
   for (int i = 0; i < width * height; i++) {
     int x = i % width;
     int y = i / width;
-    if (trailMap[x][y] > 0) {
-      trailMapPrev[x][y] -= falloff;
-    }
+    trailMapPrev[x][y] -= falloff;
     float sum = 0;
     if (crossBlur) {
       for (int[] o : crossBlurOffsets) {
@@ -93,7 +90,9 @@ void draw() {
         int oy = y + o[1];
         
         if (0 <= ox && ox < width && 0 <= oy && oy < height) {
-          sum += trailMapPrev[ox][oy];
+          if (trailMapPrev[ox][oy] > 0) {
+            sum += trailMapPrev[ox][oy];
+          }        
         } else {
           sum += 1.0 / numBlurPixels;
         }
@@ -107,13 +106,16 @@ void draw() {
         int oy = y + dy;
         
         if (0 <= ox && ox < width && 0 <= oy && oy < height) {
-          sum += trailMapPrev[ox][oy];
+          if (trailMapPrev[ox][oy] > 0) {
+            sum += trailMapPrev[ox][oy];
+          }
         } else {
           sum += 1.0 / numBlurPixels;
         }
       }
     }
     trailMap[x][y] = (sum / numBlurPixels);
+    
   }
   
   for (Agent a : agents) {
@@ -129,6 +131,9 @@ void draw() {
     int x = i % width;
     int y = i / width;
     pixels[i] = color(trailMap[x][y]);
+    if (colorFalloff != 1) {
+      pixels[i] = color(pow(trailMap[x][y], colorFalloff));
+    }
   }
   updatePixels();
 }
